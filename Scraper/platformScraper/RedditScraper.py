@@ -23,7 +23,14 @@ def scrape(lastScrapped):
                 submission.comment_sort='top'
                 comArr=[]
                 for comment in submission.comments:
-                    comArr.insert(0,comment.body)
-                outputData.insert(0,[submission.title, submission.selftext, comArr])
+                    comArr.append(comment.body)
+                outputData.append(Post(submission.title, submission.selftext, comArr))
 
     return outputData
+
+
+class Post:
+    def __init__(self, title, text, comments):
+        self.title = title
+        self.text = text
+        self.comments = comments

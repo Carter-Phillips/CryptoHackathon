@@ -1,12 +1,6 @@
 import os
 
-HEROKU_REDIS_HOST = "redis://:pa68aec7d803be5bb6d1b5cea7377c8c1a2000453985dfb7caf0afc8b5936abf1@ec2-50-17-242-160.compute-1.amazonaws.com"
-HEROKU_REDIS_PORT = "31929"
-
-GOOGLE_REDIS_HOST = "10.69.135.99"
-GOOGLE_REDIS_PORT = "6379"
-
 # Heroku
-REDIS_URL = os.environ.get("REDIS_URL", f"{HEROKU_REDIS_HOST}:{HEROKU_REDIS_PORT}")
-REDIS_HOST = os.environ.get("REDIS_HOST", HEROKU_REDIS_HOST)
-REDIS_PORT = os.environ.get("REDIS_PORT", HEROKU_REDIS_PORT)
+REDIS_URL = os.environ.get("REDIS_URL")
+REDIS_HOST = os.environ.get("REDIS_HOST")
+REDIS_PORT = os.environ.get("REDIS_PORT")

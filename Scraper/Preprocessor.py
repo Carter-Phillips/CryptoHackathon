@@ -24,8 +24,8 @@ class CryptoNotLoadedException(Exception):
 class Preprocessor():
     def __init__(self, redis_client):
         self.redis_client = redis_client
-        self.check_and_load_cryptos()
         self.loaded = False
+        self.check_and_load_cryptos()
 
     def check_loaded(self):
         # check crypto file exists 

@@ -8,7 +8,7 @@ import plotly
 import redis
 
 from celery import Celery
-from utils.redis import REDIS_URL, GOOGLE_REDIS_HOST, GOOGLE_REDIS_PORT
+from utils.redis import REDIS_URL
 
 celery_app = Celery("Celery App", broker=REDIS_URL)
 

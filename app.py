@@ -11,7 +11,7 @@ import os
 import pandas as pd
 
 import tasks
-from utils.redis import REDIS_URL, GOOGLE_REDIS_HOST, GOOGLE_REDIS_PORT
+from utils.redis import REDIS_URL
 
 app = dash.Dash("app")
 server = app.server

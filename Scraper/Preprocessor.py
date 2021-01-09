@@ -17,6 +17,8 @@ Will put feature #2 and #3 in a pipeline function to apply both and return resul
 import os
 import redis
 import json
+import nltk
+import string
 
 class CryptoNotLoadedException(Exception):
     pass
@@ -33,9 +35,11 @@ class Preprocessor():
             raise CryptoNotLoadedException("")
 
     def check_and_load_cryptos(self):
-        if self.redis_client.get("cryptos"):
+        if self.redis_client.exists("cryptos"):
             self.loaded = True
             return
+
+        print('cryptos not detected in Redis, loading cryptos... this may take a bit')
         # check crypto file exists 
         if not os.path.exists("crypto.json"):
             raise CryptoNotLoadedException("crypto.json does not exist")
@@ -45,21 +49,36 @@ class Preprocessor():
             json_content = f.read().replace('\n', '')
 
         data = json.loads(json_content)
-        # for (key, value) in data:
-        #     print("%s %s" % (key, value))
+        redis_table = 'cryptos'
+        for key in data:
+            client.hset(redis_table, key, data[key])
+            client.hset(redis_table, data[key], key)
+
         self.loaded = True
 
-    def identify_cryptos(self, text):
+    def clean_and_get_words(self, text):
+        # remove punctuation
+        text = "".join([w.lower() for w in text if w not in string.punctuation])
+        # tokenize with nltk
+        return nltk.word_tokenize(text)
+
+    def identify_cryptos(self, words):
+        for wor
         self.check_loaded()
 
-    def porter_stem(self, text):
+    def porter_stem(self, words):
         self.check_loaded()
 
     def pipeline(self, text):
+        self.clean_and_get_words(text)
+        self.identify_cryptos(text)
+        self.porter_stem(text)
         self.check_loaded()
 
 
 if __name__ == '__main__':
     client = redis.from_url(os.environ.get("REDIS_URL"))
     pre = Preprocessor(client)
+    clean = "Hello! How are you!! I'm very excited that you're going for a trip to Europe!! Yayy!"
+    print(pre.clean_and_get_words(clean))
     

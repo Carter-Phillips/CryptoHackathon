@@ -18,21 +18,24 @@ def scrape(lastScanned):
 
 
     for subreddit in data['subreddits']:
-        for submission in reddit.subreddit(subreddit).new(limit=20):
+        for submission in reddit.subreddit(subreddit).new(limit=30):
             if datetime.fromtimestamp(submission.created) > lastScanned and \
-                    submission.link_flair_text is not None and submission.selftext != '' and \
+                    submission.link_flair_text is not None and\
+                    submission.selftext != '' and \
                     submission.link_flair_text.lower() != 'comedy':
                 submission.comment_sort='top'
                 comArr=[]
                 for comment in submission.comments:
                     comArr.append(comment.body)
-                outputData.append(Post(submission.title, submission.selftext, comArr))
+                outputData.append(Post(submission.title, submission.selftext, comArr, submission.score, submission.created))
 
     return outputData
 
 
 class Post:
-    def __init__(self, title, text, comments):
+    def __init__(self, title, text, comments, upvotes, date):
         self.title = title
         self.text = text
         self.comments = comments
+        self.upvotes = upvotes
+        self.date = date

@@ -7,7 +7,7 @@ def scrape(lastScanned):
 
     data = ''
     outputData=[]
-    with open('redditInfo.json') as jsonFile:
+    with open('./platformScraper/redditInfo.json') as jsonFile:
         data = json.load(jsonFile)
 
     reddit = praw.Reddit(client_id=data['credentials']['client_id'],
@@ -19,7 +19,7 @@ def scrape(lastScanned):
 
     for subreddit in data['subreddits']:
         for submission in reddit.subreddit(subreddit).new(limit=20):
-            if datetime.fromtimestamp(submission.created) > lastScanned and \
+            if (not lastScanned or datetime.fromtimestamp(submission.created) > lastScanned) and \
                     submission.link_flair_text is not None and submission.selftext != '' and \
                     submission.link_flair_text.lower() != 'comedy':
                 submission.comment_sort='top'
@@ -36,3 +36,6 @@ class Post:
         self.title = title
         self.text = text
         self.comments = comments
+        self.processed_title = ''
+        self.processed_text = ''
+        self.processed_comments = []

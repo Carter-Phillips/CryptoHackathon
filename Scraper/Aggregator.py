@@ -23,7 +23,7 @@ class Aggregator():
             if coin not in new_coins_text:
                 new_coins_text[coin] = {}
             date = datetime.utcfromtimestamp(coin_sentiment.created).date()
-            new_coins_text[coin] = {"text":coin_sentiment.text, "timestamp":coin_sentiment.created}
+            new_coins_text[coin][date] = {"text":coin_sentiment.text, "timestamp":coin_sentiment.created}
 
 
             if not self.rdis_c.exists(coin): # first time inserting the coin into db
@@ -64,7 +64,9 @@ class Aggregator():
 
         # push any new coins to redis
         for coin in new_coins_text:
-            self.rdis_c.lpush(coin+'_TEXT', json.dumps(new_coins_text[coin]))
+            for date in sorted(new_coins_text[coin]):
+                print('writing value with timestamp {} for coin {}'.format(new_coins_text[coin][date]['timestamp'], coin))
+                self.rdis_c.lpush(coin+'_TEXT', json.dumps(new_coins_text[coin][date]))
         for coin in new_coins:
             for date in sorted(new_coins[coin]):
                 self.rdis_c.lpush(coin, json.dumps(new_coins[coin][date]))

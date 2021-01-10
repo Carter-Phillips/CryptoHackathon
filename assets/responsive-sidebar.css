@@ -1,0 +1,17 @@
+#sidebar {
+  text-align: center;
+  padding: 2rem 1rem;
+  background-color: #f8f9fa;
+  height: 100%;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  bottom: 0;
+  width: 20%;
+  text-align: left;
+}
+
+#sidebar h2 {
+  text-align: left;
+  margin-bottom: 0;
+}

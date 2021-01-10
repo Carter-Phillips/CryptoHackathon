@@ -27,6 +27,7 @@ class Analyzer():
                      % (coin_sentiment.coin, coin_sentiment.sentiment))
                 coinResults.append(coin_sentiment)
 
+    print(response)
 
         return coinResults
 

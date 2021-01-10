@@ -13,7 +13,9 @@ import json
 
 class Scraper:
     def __init__(self, redis_client: redis.client.Redis):
-        self.date_updated_reddit = False
+        timees=redis_client.get('redditUpdated').decode('UTF-8')
+        print(timees)
+        self.date_updated_reddit =int(timees)
         self.date_updated_twitter = False
         self.date_updated_coindesk = False
         self.redis_client = redis_client
@@ -39,10 +41,12 @@ class Scraper:
         # call all of our scrapers
         # scrape(timeStamp) takes a datetime object
         # and only returns posts newer than it
-        scrape_date = datetime.now()
+        scrape_date = time.time()
         reddit_results = RedditScraper.scrape(self.date_updated_reddit)
         print('DONE REDDIT SCRAPE WITH {} RESULTS'.format(reddit_results.__len__()))
-
+        print(scrape_date)
+        self.date_updated_reddit = scrape_date
+        self.redis_client.set('redditUpdated', scrape_date)
         for_analysis = []
         for result in reddit_results:
             for_analysis.append(["%s %s" % (result.title, result.text), result.created])
@@ -56,7 +60,7 @@ class Scraper:
         print("Number of posts analyzed (including comments): " + str(len(for_analysis)))
         print("Number of sentiments received: " + str(len(coin_sentiments)))
 
-        x = False
+
         posts = []
         for result in coin_sentiments:
             posts.append({"coin": result.coin, "sentiment": result.sentiment, "created": result.created, "text":result.text})

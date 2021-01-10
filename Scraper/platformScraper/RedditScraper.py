@@ -1,34 +1,58 @@
 import praw
 import json
 from datetime import datetime
-
+from os import path
 
 def scrape(lastScanned):
-    data = ''
-    outputData=[]
-    with open('./platformScraper/redditInfo.json') as jsonFile:
-        data = json.load(jsonFile)
+    if path.exists('reddit.json'):
+            print('path existed')
+            data = ''
+            processed_data = []
+            with open('reddit.json') as jsonFile:
+                data = json.load(jsonFile)
+            outputData = []
+            for post in data['data']:
+                comArr = []
+                for comment in post['comments']:
+                    comArr.append(Comment(comment['body'], comment['created']))
+                outputData.append(Post(post['title'], post['text'], comArr, post['created']))
 
-    reddit = praw.Reddit(client_id=data['credentials']['client_id'],
-                         client_secret=data['credentials']['client_secret'],
-                         user_agent=data['credentials']['user_agent'],
-                         username=data['credentials']['username'],
-                         password=data['credentials']['password'])
+            return outputData
+    else:
+        print('path not existed')
+        data = ''
+        outputData=[]
+        with open('./platformScraper/redditInfo.json') as jsonFile:
+            data = json.load(jsonFile)
 
+        reddit = praw.Reddit(client_id=data['credentials']['client_id'],
+                             client_secret=data['credentials']['client_secret'],
+                             user_agent=data['credentials']['user_agent'],
+                             username=data['credentials']['username'],
+                             password=data['credentials']['password'])
 
-    for subreddit in data['subreddits']:
-        for submission in reddit.subreddit(subreddit).new(limit=10):
-            if (not lastScanned or datetime.fromtimestamp(submission.created) > lastScanned) and \
-                    submission.link_flair_text is not None and submission.selftext != '' and \
-                    submission.link_flair_text.lower() != 'comedy':
-                submission.comment_sort='top'
-                comArr=[]
-                for comment in submission.comments:
-                    comArr.append(Comment(comment.body, comment.created_utc))
-                outputData.append(Post(submission.title, submission.selftext, comArr, submission.created))
-        print(subreddit)
+        posts = []
 
-    return outputData
+        for subreddit in data['subreddits']:
+            for submission in reddit.subreddit(subreddit).new(limit=10):
+                comments=[]
+                if (not lastScanned or datetime.fromtimestamp(submission.created) > lastScanned) and \
+                        submission.link_flair_text is not None and submission.selftext != '' and \
+                        submission.link_flair_text.lower() != 'comedy':
+                    submission.comment_sort='top'
+                    comArr=[]
+                    for comment in submission.comments:
+                        comArr.append(Comment(comment.body, comment.created_utc))
+                        comments.append({"body":comment.body, "created": comment.created_utc})
+                    outputData.append(Post(submission.title, submission.selftext, comArr, submission.created))
+                    posts.append({"title": submission.title, "text": submission.selftext, "comments": comments, "created": submission.created})
+
+        jsonOut = {"data": posts}
+
+        with open('reddit.json', 'w+') as outfile:
+            json.dump(jsonOut, outfile)
+
+        return outputData
 
 
 class Post:

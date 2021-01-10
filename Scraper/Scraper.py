@@ -26,17 +26,6 @@ class Scraper:
         return [self.updatereddit(), self.updatetwitter(), self.updatecoindesk()]
 
     def update_reddit(self):
-        if path.exists('redditJson.json'):
-            data = ''
-            processed_data = []
-            with open('redditJson.json') as jsonFile:
-                data = json.load(jsonFile)
-
-            for sentiment in data['posts']:
-                processed_data.append(CoinSentiment(sentiment['coin'], sentiment['sentiment'], sentiment['created']))
-
-            return processed_data
-        else:
             # call all of our scrapers
 
             # scrape(timeStamp) takes a datetime object
@@ -57,17 +46,6 @@ class Scraper:
             print("Number of posts analyzed (including comments): " + str(len(for_analysis)))
             print("Number of sentiments received: " + str(len(coin_sentiments)))
 
-            self.date_updated_reddit = scrape_date
-            x = False
-            posts = []
-            for result in coin_sentiments:
-                posts.append({"coin": result.coin, "sentiment": result.sentiment, "created": result.created})
-
-            jsonOut = {"posts": posts}
-
-            with open('redditJson.json', 'w+') as outfile:
-                json.dump(jsonOut, outfile)
-            return coin_sentiments
 
             return coin_sentiments
 

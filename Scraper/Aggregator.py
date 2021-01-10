@@ -66,7 +66,6 @@ class Aggregator():
         for coin in new_coins_text:
             self.rdis_c.lpush(coin+'_TEXT', json.dumps(new_coins_text[coin]))
         for coin in new_coins:
-            max_timestamp = 0
             for date in sorted(new_coins[coin]):
                 self.rdis_c.lpush(coin, json.dumps(new_coins[coin][date]))
 

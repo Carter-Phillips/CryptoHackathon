@@ -62,7 +62,6 @@ class Scraper:
 
     def process(self, result):
         # deal with processing of the data through preprocessor
-
         pre = self.preprocessor
         result.processed_title = pre.pipeline(result.title)
         result.text = pre.pipeline(result.text)

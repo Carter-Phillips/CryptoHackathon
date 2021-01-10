@@ -4,7 +4,6 @@ from datetime import datetime
 
 
 def scrape(lastScanned):
-
     data = ''
     outputData=[]
     with open('./platformScraper/redditInfo.json') as jsonFile:

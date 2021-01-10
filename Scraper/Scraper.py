@@ -3,6 +3,7 @@ from datetime import datetime
 from Preprocessor import Preprocessor
 from Analyzer import Analyzer
 import redis
+import time
 
 # to use you need to first initialize a Scraper object,
 # then initialize the processor with Scraper.initialize_processor(redis_client)

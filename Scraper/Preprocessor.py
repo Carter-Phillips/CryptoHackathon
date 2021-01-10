@@ -24,10 +24,12 @@ class CryptoNotLoadedException(Exception):
     pass
 
 class Preprocessor():
-    def __init__(self, redis_client):
+    def __init__(self, redis_client: redis.client.Redis):
         self.redis_client = redis_client
+        self.redis_table = "cryptos"
         self.loaded = False
         self.check_and_load_cryptos()
+        self.ttokenizer = nltk.TweetTokenizer() # tt = tweet tokenizer
 
     def check_loaded(self):
         # check crypto file exists 
@@ -35,7 +37,7 @@ class Preprocessor():
             raise CryptoNotLoadedException("")
 
     def check_and_load_cryptos(self):
-        if self.redis_client.exists("cryptos"):
+        if self.redis_client.exists(self.redis_table):
             self.loaded = True
             return
 
@@ -49,36 +51,63 @@ class Preprocessor():
             json_content = f.read().replace('\n', '')
 
         data = json.loads(json_content)
-        redis_table = 'cryptos'
         for key in data:
-            client.hset(redis_table, key, data[key])
-            client.hset(redis_table, data[key], key)
+            client.hset(self.redis_table, key, data[key])
+            client.hset(self.redis_table, data[key], key)
 
         self.loaded = True
 
-    def clean_and_get_words(self, text):
-        # remove punctuation
-        text = "".join([w.lower() for w in text if w not in string.punctuation])
-        # tokenize with nltk
-        return nltk.word_tokenize(text)
+    def tokenize(self, text: str) -> list:
+        return self.ttokenizer.tokenize(text)
 
-    def identify_cryptos(self, words):
-        for wor
-        self.check_loaded()
+    def clean_punctuation(self, words: str) -> list:
+        new_words = []
+        for i in range(len(words)):
+            # removes punctuation and makes lower case
+            new = "".join([w for w in words[i] if w not in string.punctuation])
+            if new != "":
+                new_words.append(new)
+        return new_words
 
-    def porter_stem(self, words):
-        self.check_loaded()
+    def lower_words(self, words: str) -> list:
+        new_words = []
+        for i in range(len(words)):
+            # removes punctuation and makes lower case
+            new = "".join([w.lower() for w in words[i]])
+            if new != "":
+                new_words.append(new)
+        return new_words
 
-    def pipeline(self, text):
-        self.clean_and_get_words(text)
-        self.identify_cryptos(text)
-        self.porter_stem(text)
+    def identify_cryptos(self, words: list) -> set:
         self.check_loaded()
+        coins = set()
+        for word in words:
+            if self.redis_client.hexists(self.redis_table, word):
+                coin = self.redis_client.hget(self.redis_table, word)
+                if coin.upper() == coin: # means it is a symbol not a name
+                    coin = word
+                
+                # decoding is required if it is pulled from the db
+                # since 
+                coins.add(coin.decode("utf-8") if type(coin) != str else coin)
+
+        return coins
+
+    def porter_stem(self, words: list) -> list:
+        self.check_loaded()
+        return []
+
+    def pipeline(self, text: str) -> tuple:
+        words = self.tokenize(text) 
+        return self.identify_cryptos(self.clean_punctuation(words)),\
+                 self.porter_stem(self.lower_words(words))
 
 
 if __name__ == '__main__':
     client = redis.from_url(os.environ.get("REDIS_URL"))
     pre = Preprocessor(client)
-    clean = "Hello! How are you!! I'm very excited that you're going for a trip to Europe!! Yayy!"
-    print(pre.clean_and_get_words(clean))
+    txt = "I love $LTC but I think I'll settle for BTC and Dogecoin"
+
+    cryptos, words = pre.pipeline(txt)
+    print(list(cryptos))
     

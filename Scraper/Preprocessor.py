@@ -26,16 +26,28 @@ import redis
 import json
 import nltk
 import string
+import typing
 
 class CryptoNotLoadedException(Exception):
     pass
 
+class NoLocalCryptoDbException(Exception):
+    pass
+
 class Preprocessor():
-    def __init__(self, redis_client: redis.client.Redis):
+    """
+    local=True will read the read json into memory to speed it up significantly
+    """
+    def __init__(self, redis_client: redis.client.Redis, local: bool = False):
         self.redis_client = redis_client
         self.redis_table = "cryptos"
+        self.local = local
+        if self.local:
+            self.crypto_db = {}
         self.loaded = False
+
         self.check_and_load_cryptos()
+
         self.ttokenizer = nltk.TweetTokenizer() # tt = tweet tokenizer
         self.stemmer = nltk.PorterStemmer() # porter stemmer 
 
@@ -45,7 +57,18 @@ class Preprocessor():
             raise CryptoNotLoadedException("")
 
     def check_and_load_cryptos(self):
-        if self.redis_client.exists(self.redis_table):
+        if self.local:
+            json_content = None
+            with open("crypto.json", "r") as f:
+                json_content = f.read().replace('\n', '')
+
+            data = json.loads(json_content)
+            for key in data:
+                self.crypto_db[key] = data[key]
+                self.crypto_db[data[key]] = key
+
+        # will not load redis stuff if local
+        if self.local or self.redis_client.exists(self.redis_table):
             self.loaded = True
             return
 
@@ -86,7 +109,7 @@ class Preprocessor():
                 new_words.append(new)
         return new_words
 
-    def identify_cryptos(self, words: list) -> set:
+    def identify_cryptos(self, words: list) -> list:
         self.check_loaded()
         coins = set()
         for word in words:
@@ -99,7 +122,20 @@ class Preprocessor():
                 # since 
                 coins.add(coin.decode("utf-8") if type(coin) != str else coin)
 
-        return coins
+        return list(coins)
+
+    def get_crypto(self, word: str) -> typing.Optional[str]:
+        self.check_loaded()
+        if not self.local:
+            raise NoLocalCryptoDbException("To use this method initialize Preprocessor with arg local=True")
+        
+        coin = None
+        if word in self.crypto_db:
+            coin = self.crypto_db[word]
+            if coin.upper() == coin: # means it is a symbol not a name
+                coin = word
+
+        return coin
 
     def porter_stem(self, words: list) -> list:
         self.check_loaded()

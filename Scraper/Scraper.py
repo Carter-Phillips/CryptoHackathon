@@ -1,25 +1,24 @@
 from platformScraper import RedditScraper, TwitterScraper, CoindeskScraper
 from datetime import datetime
-import Preprocessor
-import Analyzer
+from Preprocessor import Preprocessor
+from Analyzer import Analyzer
+import redis
 
 # to use you need to first initialize a Scraper object,
 # then initialize the processor with Scraper.initialize_processor(redis_client)
 # then you can update anything you need, processed data will be returned when an update is called.
 
 class Scraper:
-    def __init__(self):
+    def __init__(self, redis_client: redis.client.Redis):
         self.date_updated_reddit = False
         self.date_updated_twitter = False
         self.date_updated_coindesk = False
-        self.preprocessor = False
+        self.redis_client = redis_client
+        #self.preprocessor = Preprocessor(self.redis_client)
+        self.analyzer = Analyzer(self.redis_client)
 
     def update_all(self):
         return [self.updatereddit(), self.updatetwitter(), self.updatecoindesk()]
-
-    def initialize_processor(self, redis_client):
-        self.preprocessor = Preprocessor.Preprocessor(redis_client)
-        self.preprocessor.check_and_load_cryptos()
 
     def update_reddit(self):
         # call all of our scrapers
@@ -31,10 +30,10 @@ class Scraper:
         print('DONE REDDIT SCRAPE WITH {} RESULTS'.format(reddit_results.__len__()))
         coinSentiments = []
         for result in reddit_results:
-            post = Analyzer.analyze(result.title + ' ' + result.text)
+            post = self.analyzer.analyze(result.title + ' ' + result.text)
             comms = []
             for comment in result.comments:
-                comms.append(Analyzer.analyze(comment))
+                comms.append(self.analyzer.analyze(comment))
             coinSentiments.append([post, comms])
         self.date_updated_reddit = scrape_date
         return coinSentiments
@@ -64,3 +63,8 @@ class Scraper:
 
         return result
 
+if __name__ == '__main__':
+    import os
+    client = redis.from_url(os.environ.get("REDIS_URL"))
+    s = Scraper(client)
+    s.update_reddit()

@@ -1,7 +1,7 @@
 from platformScraper import RedditScraper, TwitterScraper, CoindeskScraper
 from datetime import datetime
 from Preprocessor import Preprocessor
-import Analyzer
+from Analyzer import Analyzer
 import redis
 
 # to use you need to first initialize a Scraper object,
@@ -14,7 +14,8 @@ class Scraper:
         self.date_updated_twitter = False
         self.date_updated_coindesk = False
         self.redis_client = redis_client
-        self.preprocessor = Preprocessor(self.redis_client)
+        #self.preprocessor = Preprocessor(self.redis_client)
+        self.analyzer = Analyzer(self.redis_client)
 
     def update_all(self):
         return [self.updatereddit(), self.updatetwitter(), self.updatecoindesk()]
@@ -29,10 +30,10 @@ class Scraper:
         print('DONE REDDIT SCRAPE WITH {} RESULTS'.format(reddit_results.__len__()))
         coinSentiments = []
         for result in reddit_results:
-            post = Analyzer.analyze(result.title + ' ' + result.text)
+            post = self.analyzer.analyze(result.title + ' ' + result.text)
             comms = []
             for comment in result.comments:
-                comms.append(Analyzer.analyze(comment))
+                comms.append(self.analyzer.analyze(comment))
             coinSentiments.append([post, comms])
         self.date_updated_reddit = scrape_date
         return coinSentiments

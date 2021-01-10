@@ -36,3 +36,6 @@ class Post:
         self.title = title
         self.text = text
         self.comments = comments
+        self.processed_title = ''
+        self.processed_text = ''
+        self.processed_comments = []

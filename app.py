@@ -313,11 +313,6 @@ def render_dynamic_wordmaps(selected_cryptos, container):
     if cryptos_len == 0:
         return []
 
-    text = ''
-    data = redClient.lrange(jsonData[selected_cryptos[container_len]].upper()+'_TEXT', 0, -1)
-    for entry in data:
-        text = text + json.loads(entry.decode('UTF-8'))['text']
-
     if cryptos_len > container_len:
         container = []
         for crypto in selected_cryptos:

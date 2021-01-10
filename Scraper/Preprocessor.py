@@ -1,6 +1,13 @@
 """
 This class is re-usable. Recycle it for all text rather than creating a new
 instance per text.
+
+USAGE:
+pre = Preprocessor()
+# crypto contains the set of crypto coins mentioned, words is the 
+# porter stemmed, lowercased words in the text
+crypto, words = pre.pipeline(text)
+
 #1)
 Will load crypto.json into redis if not present. 
 Automatically inverts crypto.json to identify coin names too
@@ -30,6 +37,7 @@ class Preprocessor():
         self.loaded = False
         self.check_and_load_cryptos()
         self.ttokenizer = nltk.TweetTokenizer() # tt = tweet tokenizer
+        self.stemmer = nltk.PorterStemmer() # porter stemmer 
 
     def check_loaded(self):
         # check crypto file exists 
@@ -62,18 +70,18 @@ class Preprocessor():
 
     def clean_punctuation(self, words: str) -> list:
         new_words = []
-        for i in range(len(words)):
+        for word in words:
             # removes punctuation and makes lower case
-            new = "".join([w for w in words[i] if w not in string.punctuation])
+            new = "".join([w for w in word if w not in string.punctuation])
             if new != "":
                 new_words.append(new)
         return new_words
 
     def lower_words(self, words: str) -> list:
         new_words = []
-        for i in range(len(words)):
+        for word in words:
             # removes punctuation and makes lower case
-            new = "".join([w.lower() for w in words[i]])
+            new = "".join([w.lower() for w in word])
             if new != "":
                 new_words.append(new)
         return new_words
@@ -95,7 +103,9 @@ class Preprocessor():
 
     def porter_stem(self, words: list) -> list:
         self.check_loaded()
-        return []
+        for i, word in enumerate(words):
+            words[i] = self.stemmer.stem(word)
+        return words 
 
     def pipeline(self, text: str) -> tuple:
         words = self.tokenize(text) 
@@ -110,4 +120,5 @@ if __name__ == '__main__':
 
     cryptos, words = pre.pipeline(txt)
     print(list(cryptos))
+    print(words)
     

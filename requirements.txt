@@ -5,3 +5,4 @@ dash
 celery
 gunicorn
 nltk
+wordcloud

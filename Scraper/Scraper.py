@@ -1,17 +1,18 @@
 from platformScraper import RedditScraper, TwitterScraper, CoindeskScraper
 from datetime import datetime
+import Preprocessor
 
 
 class Scraper:
     def __init__(self):
-        self.date_updated_reddit = ''
-        self.date_updated_twitter = ''
-        self.date_updated_coindesk = ''
+        self.date_updated_reddit = False
+        self.date_updated_twitter = False
+        self.date_updated_coindesk = False
 
-    def updateall(self):
+    def update_all(self):
         return [self.updatereddit(), self.updatetwitter(), self.updatecoindesk()]
 
-    def updatereddit(self):
+    def update_reddit(self):
         # call all of our scrapers
 
         # scrape(timeStamp) takes a datetime object
@@ -22,14 +23,14 @@ class Scraper:
         self.date_updated_reddit = scrape_date
         return processed_data
 
-    def updatetwitter(self):
+    def update_twitter(self):
         scrape_date = datetime.now()
         twitter_results = RedditScraper.scrape(self.date_updated_twitter)
         processed_data = process(twitter_results)
         self.date_updated_twitter = scrape_date
         return processed_data
     
-    def updatecoindesk(self):
+    def update_coindesk(self):
         scrape_date = datetime.now()
         coindesk_results = RedditScraper.scrape(self.date_updated_coindesk)
         processed_data = process(coindesk_results)
@@ -37,12 +38,13 @@ class Scraper:
         return processed_data
 
 
-def process(results):
+def process(result):
     # deal with processing of the data through preprocessor
 
-    # result.processed_title = Preprocess.pipe(result.title)
-    # result.text = Preprocess.pipe(result.text)
-    # for comment in result.comments:
-    #     result.processed_comments.append(Preprocess.pipe(result.title))
+    pre = Preprocessor()
+    result.processed_title = pre.pipe(result.title)
+    result.text = pre.pipe(result.text)
+    for comment in result.comments:
+        result.processed_comments.append(pre.pipe(comment))
 
-    return results
+    return result

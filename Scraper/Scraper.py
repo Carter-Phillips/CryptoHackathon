@@ -32,9 +32,9 @@ class Scraper:
 
         for_analysis = []
         for result in reddit_results:
-            for_analysis.append("%s %s" % (result.title, result.text))
+            for_analysis.append(["%s %s" % (result.title, result.text), result.created])
             for comment in result.comments:
-                for_analysis.append(comment)
+                for_analysis.append([comment.text, comment.created])
 
         now = time.time()
         coin_sentiments = self.analyzer.analyze(for_analysis)

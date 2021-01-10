@@ -24,8 +24,8 @@ def scrape(lastScanned):
                 submission.comment_sort='top'
                 comArr=[]
                 for comment in submission.comments:
-                    comArr.append(comment.body)
-                outputData.append(Post(submission.title, submission.selftext, comArr))
+                    comArr.append(Comment(comment.body, comment.created_utc))
+                outputData.append(Post(submission.title, submission.selftext, comArr, submission.created))
         print(subreddit)
 
     return outputData
@@ -33,14 +33,19 @@ def scrape(lastScanned):
 
 class Post:
     id = 1
-    def __init__(self, title, text, comments):
+    def __init__(self, title, text, comments, created):
         # assign id for use later
         self.id = Post.id
         Post.id += 1
-
+        self.created = created
         self.title = title
         self.text = text
         self.comments = comments
         self.processed_title = ''
         self.processed_text = ''
         self.processed_comments = []
+
+class Comment:
+    def __init__(self, text, time):
+        self.text = text
+        self.created = datetime.utcfromtimestamp(time)

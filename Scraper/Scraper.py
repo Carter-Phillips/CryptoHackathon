@@ -2,17 +2,19 @@ from platformScraper import RedditScraper, TwitterScraper, CoindeskScraper
 from datetime import datetime
 from Preprocessor import Preprocessor
 import Analyzer
+import redis
 
 # to use you need to first initialize a Scraper object,
 # then initialize the processor with Scraper.initialize_processor(redis_client)
 # then you can update anything you need, processed data will be returned when an update is called.
 
 class Scraper:
-    def __init__(self, redis_client):
+    def __init__(self, redis_client: redis.client.Redis):
         self.date_updated_reddit = False
         self.date_updated_twitter = False
         self.date_updated_coindesk = False
-        self.preprocessor = Preprocessor(redis_client)
+        self.redis_client = redis_client
+        self.preprocessor = Preprocessor(self.redis_client)
 
     def update_all(self):
         return [self.updatereddit(), self.updatetwitter(), self.updatecoindesk()]
@@ -61,5 +63,7 @@ class Scraper:
         return result
 
 if __name__ == '__main__':
-    s = Scraper()
+    import os
+    client = redis.from_url(os.environ.get("REDIS_URL"))
+    s = Scraper(client)
     s.update_reddit()

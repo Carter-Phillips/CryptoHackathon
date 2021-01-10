@@ -3,4 +3,3 @@ pandas
 redis
 dash
 celery
-gunicorn

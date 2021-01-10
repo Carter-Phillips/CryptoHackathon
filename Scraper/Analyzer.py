@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 
 class Analyzer():
-    def __init__(self, redis_client, max_threads: int = 15):
+    def __init__(self, redis_client, max_threads: int = 10):
         self.redis_client = redis_client
         self.preprocessor = Preprocessor(redis_client, local=True)
         self.client = language_v1.LanguageServiceClient()

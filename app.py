@@ -8,10 +8,12 @@ from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
 from datetime import datetime as dt
 import flask
 import redis
 import plotly.graph_objs as go
+import plotly.express as px
 import pandas as pd
 from wordcloud import WordCloud, STOPWORDS
 
@@ -25,6 +27,22 @@ FEEDS = ["reddit"]
 # Redis
 redis_instance = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
 crypto_pairs = redis_instance.hgetall("cryptos_nodupe")
+
+reverse_pairs = {}
+for key, value in crypto_pairs.items():
+    reverse_pairs[value] = key
+
+redis_hashs = redis_instance.keys("*")
+redis_hashs_ignore = [
+    "_kombu.binding.celery",
+    "_kombu.binding.celery.pidbox",
+    "_kombu.binding.celeryev",
+    "app-data",
+    "cryptos",
+    "cryptos_nodupe",
+]
+redis_db_pairs = [item for item in redis_hashs if "_TEXT" not in item]
+redis_db_pairs = {item for item in redis_db_pairs if (item not in redis_hashs_ignore)}
 
 # APIs
 binance_client = binancePriceFetch()
@@ -79,7 +97,7 @@ def sidebar():
     return sidebar
 
 
-def main_container(id="", header_name="header", short_desc=""):
+def main_container(id="", header_name="header", short_desc="", value="BTC"):
     dropdowns = html.Div(
         [
             html.H4(header_name, id=header_name),
@@ -90,14 +108,14 @@ def main_container(id="", header_name="header", short_desc=""):
                     dcc.Dropdown(
                         id=f"main-{id}-dropdown",
                         options=[
-                            {"label": coin, "value": symbol}
-                            for coin, symbol in crypto_pairs.items()
+                            {"label": coin, "value": coin} for coin in redis_db_pairs
                         ],
                         multi=True,
-                        value="BTC",
+                        value=value,
                         placeholder="Select Cryptocurrency",
                     ),
-                ], style={"width": "50%"}
+                ],
+                style={"width": "50%"},
             ),
         ]
     )
@@ -145,12 +163,12 @@ def header():
                 id="navbar-collapse",
                 navbar=True,
                 children=[
-                    dbc.Row(
-                        dbc.Col(dbc.NavLink("Home", href="#")),
-                        no_gutters=True,
-                        className="ml-auto flex-nowrap mt-3 mt-md-0",
-                        align="center",
-                    ),
+                    # dbc.Row(
+                    #     dbc.Col(dbc.NavLink("Home", href="#")),
+                    #     no_gutters=True,
+                    #     className="ml-auto flex-nowrap mt-3 mt-md-0",
+                    #     align="center",
+                    # ),
                 ],
             ),
         ],
@@ -174,21 +192,18 @@ def serve_layout():
                             html.Div(
                                 id="app-container",
                                 children=[
-                                    # html.Div(
-                                    #     [
-                                    #         html.Div(id="status"),
-                                    #         dcc.Dropdown(
-                                    #             id="dropdown",
-                                    #             options=[
-                                    #                 {"value": i, "label": i}
-                                    #                 for i in ["LA", "NYC", "MTL"]
-                                    #             ],
-                                    #             value="LA",
-                                    #         ),
-                                    #         dcc.Graph(id="graph"),
-                                    #     ]
-                                    # ),
-                                    main_container(id="wordmaps", header_name="Wordmaps", short_desc="A visualization of word counts."),
+                                    main_container(
+                                        id="sentiment-agg",
+                                        header_name="Sentiment",
+                                        short_desc="A visualization of sentiment counts.",
+                                        value="BITCOIN",
+                                    ),
+                                    main_container(
+                                        id="wordmaps",
+                                        header_name="Wordmaps",
+                                        short_desc="A visualization of word counts.",
+                                        value="BITCOIN",
+                                    ),
                                 ],
                                 className="app-contents-container",
                             ),
@@ -253,8 +268,6 @@ def update_sidebar_sentiment(selected_crypto):
 
 # Callbacks
 # -------------------------------------------------------------------
-
-
 @app.callback(
     Output("sidebar-crypto-meta", "children"),
     [Input("sidebar-sentiment-dropdown", "value"), Input("interval", "n_intervals")],
@@ -298,51 +311,80 @@ def render_dynamic_wordmaps(selected_cryptos, container):
     cryptos_len = len(selected_cryptos)
 
     if cryptos_len == 0:
-        return dash.no_update
+        return []
 
     if cryptos_len > container_len:
-        text = "Wikipedia was launched on January 15, 2001, by Jimmy Wales and Larry Sanger.[10] Sanger coined its name,[11][12] as a portmanteau of wiki[notes 3] and 'encyclopedia'. Initially an English-language encyclopedia, versions in other languages were quickly developed. With 5,748,461 articles,[notes 4] the English Wikipedia is the largest of the more than 290 Wikipedia encyclopedias. Overall, Wikipedia comprises more than 40 million articles in 301 different languages[14] and by February 2014 it had reached 18 billion page views and nearly 500 million unique visitors per month.[15] In 2005, Nature published a peer review comparing 42 science articles from Encyclopadia Britannica and Wikipedia and found that Wikipedia's level of accuracy approached that of Britannica.[16] Time magazine stated that the open-door policy of allowing anyone to edit had made Wikipedia the biggest and possibly the best encyclopedia in the world and it was testament to the vision of Jimmy Wales.[17] Wikipedia has been criticized for exhibiting systemic bias, for presenting a mixture of 'truths, half truths, and some falsehoods',[18] and for being subject to manipulation and spin in controversial topics.[19] In 2017, Facebook announced that it would help readers detect fake news by suitable links to Wikipedia articles. YouTube announced a similar plan in 2018."
-        fig = pwc(text)
-        col_graph = html.Div(dbc.Col(dcc.Graph(figure=fig)))
-        container.append(col_graph)
-    elif cryptos_len > 3 or cryptos_len < container_len:
+        container = []
+        for crypto in selected_cryptos:
+            text = redis_instance.lrange(crypto + "_TEXT", 0, -1)
+            text = [json.loads(itm) for itm in text]
+
+            df_text = pd.DataFrame(text)
+            text = df_text.loc[0, "text"]
+            fig = pwc(text)
+            col_graph = dbc.Col(dcc.Graph(figure=fig), width=6)
+            container.append(col_graph)
+    elif cryptos_len < container_len:
         container.pop()
     return container
 
 
-def get_dataframe():
-    """Retrieve the dataframe from Redis
-    This dataframe is periodically updated through the redis task
-    """
-    jsonified_df = redis_instance.hget(
-        tasks.REDIS_HASH_NAME, tasks.REDIS_KEYS["DATASET"]
-    )
-    df = pd.DataFrame(json.loads(jsonified_df))
-    return df
+@app.callback(
+    Output("main-sentiment-agg-container", "children"),
+    [Input("main-sentiment-agg-dropdown", "value")],
+    [State("main-sentiment-agg-container", "children")],
+)
+def render_dynamic_sentiments(selected_cryptos, container):
+    if not isinstance(selected_cryptos, list):
+        selected_cryptos = [selected_cryptos]
 
+    container_len = len(container)
+    cryptos_len = len(selected_cryptos)
 
-# @app.callback(
-#     Output("graph", "figure"),
-#     [Input("dropdown", "value"), Input("interval", "n_intervals")],
-# )
-# def update_graph(value, _):
-#     df = get_dataframe()
-#     return {
-#         "data": [{"x": df["time"], "y": df["value"], "type": "bar"}],
-#         "layout": {"title": value},
-#     }
+    if cryptos_len == 0:
+        return []
 
+    if cryptos_len > container_len:
+        container = []
 
-# @app.callback(
-#     Output("status", "children"),
-#     [Input("dropdown", "value"), Input("interval", "n_intervals")],
-# )
-# def update_status(value, _):
-#     data_last_updated = redis_instance.hget(
-#         tasks.REDIS_HASH_NAME, tasks.REDIS_KEYS["DATE_UPDATED"]
-#     )
-#     return "Data last updated at {}".format(data_last_updated)
+        for crypto in selected_cryptos:
+            meta = redis_instance.lrange(crypto, 0, -1)
+            meta = [json.loads(itm) for itm in meta]
 
+            df_meta = pd.DataFrame(meta)
+
+            fig = px.bar(
+                df_meta,
+                x="date",
+                y="avg_sentiment",
+                hover_data=["samples"],
+                labels={"avg_sentiment": "Average Sentiment"},
+            )
+            fig.update_layout(title=f"{crypto}")
+            sentiment_text_container = html.Div(
+                children=[
+                    html.Br(),
+                    html.H5("Text"),
+                    html.Hr(),
+                    html.P("Click on a point to see text data..."),
+                    html.Div(id=f"main-sentiment-{crypto}-text", children=[]),
+                ]
+            )
+
+            col_graph = dbc.Col(
+                [
+                    dbc.Row(
+                        [
+                            dbc.Col([dcc.Graph(figure=fig)], width=12),
+                        ]
+                    )
+                ],
+                width=6,
+            )
+            container.append(col_graph)
+    elif cryptos_len < container_len:
+        container.pop()
+    return container
 
 if __name__ == "__main__":
     app.run_server(debug=True)

@@ -8,11 +8,11 @@ import Analyzer
 # then you can update anything you need, processed data will be returned when an update is called.
 
 class Scraper:
-    def __init__(self):
+    def __init__(self, redis_client):
         self.date_updated_reddit = False
         self.date_updated_twitter = False
         self.date_updated_coindesk = False
-        self.preprocessor = Preprocessor()
+        self.preprocessor = Preprocessor(redis_client)
 
     def update_all(self):
         return [self.updatereddit(), self.updatetwitter(), self.updatecoindesk()]
@@ -60,3 +60,6 @@ class Scraper:
 
         return result
 
+if __name__ == '__main__':
+    s = Scraper()
+    s.update_reddit()

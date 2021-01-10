@@ -15,7 +15,7 @@ class Scraper:
     def __init__(self, redis_client: redis.client.Redis):
         timees=redis_client.get('redditUpdated').decode('UTF-8')
         print(timees)
-        self.date_updated_reddit =int(timees)
+        self.date_updated_reddit =float(timees)
         self.date_updated_twitter = False
         self.date_updated_coindesk = False
         self.redis_client = redis_client

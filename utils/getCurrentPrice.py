@@ -8,7 +8,7 @@ class binancePriceFetch:
         self.client = Client(data['key'], data['secret'])
 
     def getPrice(self, coin):
-        result = client.get_symbol_ticker(symbol == coin+'USDT')
+        result = self.client.get_symbol_ticker(symbol = coin+'USDT')
         return result['price']
 
 

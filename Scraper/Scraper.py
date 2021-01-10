@@ -1,6 +1,6 @@
 from platformScraper import RedditScraper, TwitterScraper, CoindeskScraper
 from datetime import datetime
-import Preprocessor
+from Preprocessor import Preprocessor
 import Analyzer
 
 # to use you need to first initialize a Scraper object,
@@ -12,14 +12,10 @@ class Scraper:
         self.date_updated_reddit = False
         self.date_updated_twitter = False
         self.date_updated_coindesk = False
-        self.preprocessor = False
+        self.preprocessor = Preprocessor()
 
     def update_all(self):
         return [self.updatereddit(), self.updatetwitter(), self.updatecoindesk()]
-
-    def initialize_processor(self, redis_client):
-        self.preprocessor = Preprocessor.Preprocessor(redis_client)
-        self.preprocessor.check_and_load_cryptos()
 
     def update_reddit(self):
         # call all of our scrapers

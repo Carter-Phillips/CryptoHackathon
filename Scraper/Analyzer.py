@@ -29,7 +29,7 @@ def analyze(input):
             coinResults.append(
                 CoinSentiment(coin.decode("utf-8") if type(coin) != str else coin, entity.sentiment.score))
 
-    return coinSentiment
+    return coinResults
 
 class CoinSentiment:
     def __init__(self, coin, sentiment):

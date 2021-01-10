@@ -47,13 +47,14 @@ class Analyzer():
             if entity.sentiment.score != 0:
                 coin = self.preprocessor.get_crypto(entity.name)
                 if coin:
-                    coin_sentiment = CoinSentiment(coin, entity.sentiment.score, created)
-                    coinResults.append([coin_sentiment, input[0]])
+                    coin_sentiment = CoinSentiment(coin, entity.sentiment.score, created, input[0])
+                    coinResults.append(coin_sentiment)
 
         return coinResults
 
 class CoinSentiment:
-    def __init__(self, coin, sentiment, created):
+    def __init__(self, coin, sentiment, created, text):
         self.coin = coin
         self.sentiment = sentiment
         self.created = created
+        self.text = text

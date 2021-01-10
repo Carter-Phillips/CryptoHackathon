@@ -31,7 +31,7 @@ class Scraper:
                 data = json.load(jsonFile)
 
             for sentiment in data['posts']:
-                processed_data.append(CoinSentiment(sentiment['coin'], sentiment['sentiment'], sentiment['created']))
+                processed_data.append(CoinSentiment(sentiment['coin'], sentiment['sentiment'], sentiment['created'], sentiment['text']))
 
             print("Number of sentiments received: " + str(len(processed_data)))
 
@@ -59,7 +59,7 @@ class Scraper:
         x = False
         posts = []
         for result in coin_sentiments:
-            posts.append({"coin": result.coin, "sentiment": result.sentiment, "created": result.created})
+            posts.append({"coin": result.coin, "sentiment": result.sentiment, "created": result.created, "text":result.text})
 
         jsonOut = {"posts": posts}
 
@@ -93,10 +93,11 @@ class Scraper:
         return result
 
 class CoinSentiment:
-    def __init__(self, coin, sentiment, created):
+    def __init__(self, coin, sentiment, created, text):
         self.coin = coin
         self.sentiment = sentiment
         self.created = created
+        self.text = text
 
 if __name__ == '__main__':
     import os

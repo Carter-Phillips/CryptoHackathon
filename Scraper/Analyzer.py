@@ -28,7 +28,7 @@ class Analyzer():
         for future in futures:
             coin_sentiments.extend(future.result())
 
-        return coin_sentiments 
+        return coin_sentiments
 
     @sleep_and_retry
     @limits(calls=CALLS, period=TIME_PERIOD)
@@ -45,7 +45,7 @@ class Analyzer():
                 coin = self.preprocessor.get_crypto(entity.name)
                 if coin:
                     coin_sentiment = CoinSentiment(coin, entity.sentiment.score, created)
-                    coinResults.append(coin_sentiment)
+                    coinResults.append([coin_sentiment, input[0]])
 
         return coinResults
 

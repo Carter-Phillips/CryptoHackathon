@@ -32,7 +32,7 @@ class Scraper:
             with open('redditJson.json') as jsonFile:
                 data = json.load(jsonFile)
 
-            for sentiment in data:
+            for sentiment in data['posts']:
                 processed_data.append(CoinSentiment(sentiment['coin'], sentiment['sentiment'], sentiment['created']))
 
             return processed_data

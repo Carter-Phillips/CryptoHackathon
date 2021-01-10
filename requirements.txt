@@ -7,3 +7,4 @@ gunicorn
 nltk
 wordcloud
 dash_bootstrap_components
+binance

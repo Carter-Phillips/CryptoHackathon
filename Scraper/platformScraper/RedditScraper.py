@@ -48,4 +48,4 @@ class Post:
 class Comment:
     def __init__(self, text, time):
         self.text = text
-        self.created = datetime.utcfromtimestamp(time)
+        self.created = time

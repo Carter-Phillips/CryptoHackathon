@@ -4,3 +4,4 @@ redis
 dash
 celery
 google-cloud-language
+nltk

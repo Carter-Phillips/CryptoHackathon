@@ -3,6 +3,7 @@ from datetime import datetime
 from Preprocessor import Preprocessor
 from Analyzer import Analyzer
 import redis
+import time
 
 # to use you need to first initialize a Scraper object,
 # then initialize the processor with Scraper.initialize_processor(redis_client)
@@ -28,15 +29,22 @@ class Scraper:
         scrape_date = datetime.now()
         reddit_results = RedditScraper.scrape(self.date_updated_reddit)
         print('DONE REDDIT SCRAPE WITH {} RESULTS'.format(reddit_results.__len__()))
-        coinSentiments = []
+
+        for_analysis = []
         for result in reddit_results:
-            post = self.analyzer.analyze(result.title + ' ' + result.text)
-            comms = []
+            for_analysis.append("%s %s" % (result.title, result.text))
             for comment in result.comments:
-                comms.append(self.analyzer.analyze(comment))
-            coinSentiments.append([post, comms])
+                for_analysis.append(comment)
+
+        now = time.time()
+        coin_sentiments = self.analyzer.analyze(for_analysis)
+        print("Time taken for analysis: " + str(time.time() - now))
+        print("Number of posts analyzed (including comments): " + str(len(for_analysis)))
+        print("Number of sentiments received: " + str(len(coin_sentiments)))
+
         self.date_updated_reddit = scrape_date
-        return coinSentiments
+
+        return coin_sentiments
 
     def update_twitter(self):
         scrape_date = datetime.now()

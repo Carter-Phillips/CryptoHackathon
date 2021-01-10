@@ -147,14 +147,3 @@ class Preprocessor():
         words = self.tokenize(text) 
         return self.identify_cryptos(self.clean_punctuation(words)),\
                  self.porter_stem(self.lower_words(words))
-
-
-if __name__ == '__main__':
-    client = redis.from_url(os.environ.get("REDIS_URL"))
-    pre = Preprocessor(client)
-    txt = "I love $LTC but I think I'll settle for BTC and Dogecoin"
-
-    cryptos, words = pre.pipeline(txt)
-    print(list(cryptos))
-    print(words)
-    

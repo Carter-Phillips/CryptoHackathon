@@ -70,9 +70,3 @@ class Scraper:
             result.processed_comments.append(pre.pipeline(comment))
 
         return result
-
-if __name__ == '__main__':
-    import os
-    client = redis.from_url(os.environ.get("REDIS_URL"))
-    s = Scraper(client)
-    s.update_reddit()

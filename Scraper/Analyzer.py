@@ -7,7 +7,7 @@ def analyze(input):
     client = language_v1.LanguageServiceClient()
 
     document = language_v1.Document(content=input, type_=language_v1.Document.Type.PLAIN_TEXT)
-    annotations = client.analyze_sentiment(request={'document': document})
+    annotations = client.analyze_entity_sentiment(request={'document': document})
 
     # Print the results
     return annotations

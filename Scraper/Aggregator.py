@@ -49,18 +49,29 @@ class Aggregator():
                     latest = json.loads(self.rdis_c.lpop(coin))
                     latest_date = datetime.strptime(latest["date"], "%Y-%m-%d").date()
                     if latest_date < datetime.utcnow().date(): # it's a new day!
-                        self.rdis_c.lpush(latest)
+                        self.rdis_c.lpush(coin, json.dumps(latest))
                         new_latest =\
+<<<<<<< Updated upstream
                             self.get_new_sentiment_dict(datetime.utcnow().date(), coin_sentiment[0])
                         self.rdis_c.lpush(new_latest)
+=======
+                            self.get_new_sentiment_dict(datetime.utcnow().date(), coin_sentiment)
+                        self.rdis_c.lpush(coin, json.dumps(new_latest))
+>>>>>>> Stashed changes
                         self.trim(coin)
                     else:
                         latest["avg_sentiment"] = \
                             self.get_new_avg(\
                                 latest["avg_sentiment"], latest["samples"], coin_sentiment[0].sentiment\
                             )
+<<<<<<< Updated upstream
                         latest["timestamp"] = max(latest["timestamp"], coin_sentiment[0].created)
                         self.rdis_c.lpush(latest)
+=======
+                        latest["timestamp"] = max(latest["timestamp"], coin_sentiment.created)
+                        self.rdis_c.lpush(coin, json.dumps(latest))
+
+>>>>>>> Stashed changes
         # push any new coins to redis
         for coin in new_coins_text:
             self.rdis_c.lpush(coin+'_TEXT', json.dumps(new_coins_text[coin]))

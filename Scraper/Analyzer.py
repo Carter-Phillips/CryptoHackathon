@@ -35,7 +35,10 @@ class Analyzer():
     def _analyze(self, input: str) -> list:
         """Run a sentiment analysis request on text within a passed filename."""
         document = language_v1.Document(content=input[0], type_=language_v1.Document.Type.PLAIN_TEXT)
-        response = self.client.analyze_entity_sentiment(request={'document': document})
+        try:
+            response = self.client.analyze_entity_sentiment(request={'document': document})
+        except: # some shitty exception like this dude that posted in german and not english
+            return []
 
         created = input[1]
         # YES RAGHAV I YOINKED YOUR CODE GET HECKED ON
@@ -54,5 +57,3 @@ class CoinSentiment:
         self.coin = coin
         self.sentiment = sentiment
         self.created = created
-    def __str__(self):
-        return 

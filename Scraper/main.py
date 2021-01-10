@@ -5,7 +5,9 @@ import redis
 
 client = redis.from_url(os.environ.get("REDIS_URL"))
 s = Scraper(client)
-coin_sentiments = s.update_reddit()
+# IMPORTANT ---- SET local=False IF YOU want the results to be correct or
+# it will break something FOR SURE
+coin_sentiments = s.update_reddit(local=True)
 
 ag = Aggregator(coin_sentiments, client)
 ag.aggregate_by_day()

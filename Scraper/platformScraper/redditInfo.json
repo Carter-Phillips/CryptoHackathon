@@ -3,7 +3,10 @@
     "bitcoin",
     "ethereum",
     "ethtrader",
-    "cryptomarkets"
+    "cryptomarkets",
+    "btc",
+    "dogecoin",
+    "litecoin"
   ],
   "credentials":
   {

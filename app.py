@@ -242,15 +242,14 @@ def toggle_sidebar_collapse(n):
     [Input("sidebar-sentiment-dropdown", "value")],
 )
 def update_sidebar_sentiment(selected_crypto):
-    if selected_crypto == "Bitcoin":
+    data = redClient.lrange(jsonData[selected_crypto].upper(), 0, 0)
+    text =0
+    for entry in data:
+        text = text + json.loads(entry.decode('UTF-8'))['avg_sentiment']
 
-        return ["+2 ▲" for i in range(len(FEEDS) + 1)] + [
-            "sidebar-container-sentiment-positive" for i in range(len(FEEDS) + 1)
-        ]
-    else:
-        return ["-1 ▼" for i in range(len(FEEDS) + 1)] + [
-            "sidebar-container-sentiment-negative" for i in range(len(FEEDS) + 1)
-        ]
+
+    return ["%.2f" % (text*100) for i in range(len(FEEDS) + 1)] + [
+        "sidebar-container-sentiment-negative" for i in range(len(FEEDS) + 1)]
 
 
 # Callbacks

@@ -1,5 +1,10 @@
 {
-  "subreddits":  ["bitcoin", "ethereum", "ethtrader", "cryptomarkets"],
+  "subreddits":  [
+    "bitcoin",
+    "ethereum",
+    "ethtrader",
+    "cryptomarkets"
+  ],
   "credentials":
   {
       "client_id": "EpM-tm-knvhoNQ",

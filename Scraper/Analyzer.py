@@ -8,7 +8,7 @@ from threading import Lock
 import time
 from ratelimit import limits, sleep_and_retry
 
-CALLS = 300 # max 300 requests
+CALLS = 450 # max 450 requests
 TIME_PERIOD = 60 # per min (to the Google API)
 
 class Analyzer():

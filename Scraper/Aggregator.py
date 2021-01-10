@@ -33,16 +33,17 @@ class Aggregator():
                     new_coins[coin][date]["timestamp"] = \
                         max(new_coins[coin][date]["timestamp"], coin_sentiment.created)
             else: # for ones present in redis
-                top = json.loads(self.rdis_c.range(coin, 0, 0))
+                top = self.rdis_c.lrange(coin, 0, 0) # returns list with only top element
+                top = json.loads(top[0])
                 latest_timestamp = top["timestamp"]
                 if coin_sentiment.created > latest_timestamp: # new entry
                     # get most recent date in list
                     latest = json.loads(self.rdis_c.lpop(coin))
                     latest_date = datetime.strptime(latest["date"], "%Y-%m-%d").date()
-                    if latest_date < datetime.now().date(): # it's a new day!
+                    if latest_date < datetime.utcnow().date(): # it's a new day!
                         self.rdis_c.lpush(latest)
                         new_latest =\
-                            self.get_new_sentiment_dict(datetime.now().date(), coin_sentiment)
+                            self.get_new_sentiment_dict(datetime.utcnow().date(), coin_sentiment)
                         self.rdis_c.lpush(new_latest)
                         self.trim(coin)
                     else:

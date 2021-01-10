@@ -36,7 +36,7 @@ def scrape(lastScanned):
         for subreddit in data['subreddits']:
             for submission in reddit.subreddit(subreddit).new(limit=10000):
                 comments=[]
-                if (not lastScanned or datetime.fromtimestamp(submission.created) > lastScanned) and \
+                if (not lastScanned or datetime.fromtimestamp(submission.created_utc) > lastScanned) and \
                         submission.link_flair_text is not None and submission.selftext != '' and \
                         submission.link_flair_text.lower() != 'comedy':
                     submission.comment_sort='top'
@@ -45,8 +45,8 @@ def scrape(lastScanned):
                         comment = submission.comments[i]
                         comArr.append(Comment(comment.body, comment.created_utc))
                         comments.append({"body":comment.body, "created": comment.created_utc})
-                    outputData.append(Post(submission.title, submission.selftext, comArr, submission.created))
-                    posts.append({"title": submission.title, "text": submission.selftext, "comments": comments, "created": submission.created})
+                    outputData.append(Post(submission.title, submission.selftext, comArr, submission.created_utc))
+                    posts.append({"title": submission.title, "text": submission.selftext, "comments": comments, "created": submission.created_utc})
 
         jsonOut = {"data": posts}
 

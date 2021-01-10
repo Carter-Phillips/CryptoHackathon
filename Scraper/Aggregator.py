@@ -10,6 +10,7 @@ class Aggregator():
         self.rdis_c = redis_client
 
     def aggregate_by_day(self):
+        new_coins_text = {}
         new_coins = {} # will contain any new coins not yet in redis
         # we sort the sentiments based on time created so that when we
         # update the latest_timestamp in redis for a specific coin
@@ -18,6 +19,13 @@ class Aggregator():
         self.coin_sentiments.sort(key=lambda cs: cs.created)
         for coin_sentiment in self.coin_sentiments:
             coin = coin_sentiment.coin.upper()
+
+            if coin not in new_coins_text:
+                new_coins_text[coin] = {}
+            date = datetime.utcfromtimestamp(coin_sentiment.created).date()
+            new_coins_text[coin] = {"text":coin_sentiment.text, "timestamp":coin_sentiment.created}
+
+
             if not self.rdis_c.exists(coin): # first time inserting the coin into db
                 if coin not in new_coins:
                     new_coins[coin] = {}
@@ -41,10 +49,10 @@ class Aggregator():
                     latest = json.loads(self.rdis_c.lpop(coin))
                     latest_date = datetime.strptime(latest["date"], "%Y-%m-%d").date()
                     if latest_date < datetime.utcnow().date(): # it's a new day!
-                        self.rdis_c.lpush(latest)
+                        self.rdis_c.lpush(coin, json.dumps(latest))
                         new_latest =\
                             self.get_new_sentiment_dict(datetime.utcnow().date(), coin_sentiment)
-                        self.rdis_c.lpush(new_latest)
+                        self.rdis_c.lpush(coin, json.dumps(new_latest))
                         self.trim(coin)
                     else:
                         latest["avg_sentiment"] = \
@@ -52,10 +60,12 @@ class Aggregator():
                                 latest["avg_sentiment"], latest["samples"], coin_sentiment.sentiment\
                             )
                         latest["timestamp"] = max(latest["timestamp"], coin_sentiment.created)
-                        self.rdis_c.lpush(latest)
+                        self.rdis_c.lpush(coin, json.dumps(latest))
+
         # push any new coins to redis
+        for coin in new_coins_text:
+            self.rdis_c.lpush(coin+'_TEXT', json.dumps(new_coins_text[coin]))
         for coin in new_coins:
-            max_timestamp = 0
             for date in sorted(new_coins[coin]):
                 self.rdis_c.lpush(coin, json.dumps(new_coins[coin][date]))
 

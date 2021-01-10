@@ -22,8 +22,8 @@ class Aggregator():
 
             if coin not in new_coins_text:
                 new_coins_text[coin] = {}
-            date = datetime.utcfromtimestamp(coin_sentiment.created).date()
-            new_coins_text[coin][date] = {"text":coin_sentiment.text, "timestamp":coin_sentiment.created}
+            date = coin_sentiment.created
+            new_coins_text[coin][date] = {"text":coin_sentiment.text, "timestamp":coin_sentiment.created, "date":datetime.utcfromtimestamp(coin_sentiment.created).date().__str__()}
 
 
             if not self.rdis_c.exists(coin): # first time inserting the coin into db

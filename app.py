@@ -10,7 +10,6 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from datetime import datetime as dt
-import flask
 import redis
 import plotly.graph_objs as go
 import plotly.express as px
@@ -50,8 +49,10 @@ binance_client = binancePriceFetch()
 # Dash
 app = dash.Dash("app", external_stylesheets=[dbc.themes.JOURNAL])
 server = app.server
-
-
+jsonData = ''
+with open('./Scraper/crypto.json') as jsonFile:
+    jsonData = json.load(jsonFile)
+redClient = redis.from_url(os.environ.get("REDIS_URL"))
 def sidebar_content():
     crypto_meta = [html.Div(" ", id="sidebar-crypto-meta")]
 
@@ -255,15 +256,14 @@ def toggle_sidebar_collapse(n):
     [Input("sidebar-sentiment-dropdown", "value")],
 )
 def update_sidebar_sentiment(selected_crypto):
-    if selected_crypto == "Bitcoin":
+    data = redClient.lrange(jsonData[selected_crypto].upper(), 0, 0)
+    text =0
+    for entry in data:
+        text = text + json.loads(entry.decode('UTF-8'))['avg_sentiment']
 
-        return ["+2 ▲" for i in range(len(FEEDS) + 1)] + [
-            "sidebar-container-sentiment-positive" for i in range(len(FEEDS) + 1)
-        ]
-    else:
-        return ["-1 ▼" for i in range(len(FEEDS) + 1)] + [
-            "sidebar-container-sentiment-negative" for i in range(len(FEEDS) + 1)
-        ]
+
+    return ["%.2f" % (text*100) for i in range(len(FEEDS) + 1)] + [
+        "sidebar-container-sentiment-negative" for i in range(len(FEEDS) + 1)]
 
 
 # Callbacks
@@ -312,6 +312,11 @@ def render_dynamic_wordmaps(selected_cryptos, container):
 
     if cryptos_len == 0:
         return []
+
+    text = ''
+    data = redClient.lrange(jsonData[selected_cryptos[container_len]].upper()+'_TEXT', 0, -1)
+    for entry in data:
+        text = text + json.loads(entry.decode('UTF-8'))['text']
 
     if cryptos_len > container_len:
         container = []

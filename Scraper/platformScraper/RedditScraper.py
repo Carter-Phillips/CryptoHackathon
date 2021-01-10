@@ -34,9 +34,9 @@ def scrape(lastScanned):
         posts = []
 
         for subreddit in data['subreddits']:
-            for submission in reddit.subreddit(subreddit).new(limit=100):
+            for submission in reddit.subreddit(subreddit).new(limit=10000):
                 comments=[]
-                if (not lastScanned or datetime.fromtimestamp(submission.created_utc) > lastScanned) and \
+                if (not lastScanned or datetime.fromtimestamp(submission.created_utc).timestamp() > lastScanned) and \
                         submission.link_flair_text is not None and submission.selftext != '' and \
                         submission.link_flair_text.lower() != 'comedy':
                     submission.comment_sort='top'

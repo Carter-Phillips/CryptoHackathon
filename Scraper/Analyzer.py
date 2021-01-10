@@ -26,23 +26,22 @@ class Analyzer():
 
     def _analyze(self, input: str) -> list:
         """Run a sentiment analysis request on text within a passed filename."""
-        document = language_v1.Document(content=input, type_=language_v1.Document.Type.PLAIN_TEXT)
+        document = language_v1.Document(content=input[0], type_=language_v1.Document.Type.PLAIN_TEXT)
         response = self.client.analyze_entity_sentiment(request={'document': document})
-
+        created = input[1]
         # YES RAGHAV I YOINKED YOUR CODE GET HECKED ON
         coinResults = []
         for entity in response.entities:
             if entity.sentiment.score != 0:
                 coin = self.preprocessor.get_crypto(entity.name)
                 if coin:
-                    coin_sentiment = CoinSentiment(coin, entity.sentiment.score)
+                    coin_sentiment = CoinSentiment(coin, entity.sentiment.score, created)
                     coinResults.append(coin_sentiment)
-
-    print(response)
 
         return coinResults
 
 class CoinSentiment:
-    def __init__(self, coin, sentiment):
+    def __init__(self, coin, sentiment, created):
         self.coin = coin
         self.sentiment = sentiment
+        self.created = created

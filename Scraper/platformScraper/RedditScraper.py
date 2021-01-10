@@ -18,7 +18,7 @@ def scrape(lastScanned):
 
 
     for subreddit in data['subreddits']:
-        for submission in reddit.subreddit(subreddit).new(limit=20):
+        for submission in reddit.subreddit(subreddit).new(limit=50):
             if (not lastScanned or datetime.fromtimestamp(submission.created) > lastScanned) and \
                     submission.link_flair_text is not None and submission.selftext != '' and \
                     submission.link_flair_text.lower() != 'comedy':
@@ -27,6 +27,7 @@ def scrape(lastScanned):
                 for comment in submission.comments:
                     comArr.append(comment.body)
                 outputData.append(Post(submission.title, submission.selftext, comArr))
+        print(subreddit)
 
     return outputData
 

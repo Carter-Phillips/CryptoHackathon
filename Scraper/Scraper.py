@@ -1,6 +1,7 @@
 from platformScraper import RedditScraper, TwitterScraper, CoindeskScraper
 from datetime import datetime
 import Preprocessor
+import Analyzer
 
 # to use you need to first initialize a Scraper object,
 # then initialize the processor with Scraper.initialize_processor(redis_client)
@@ -27,9 +28,16 @@ class Scraper:
         # and only returns posts newer than it
         scrape_date = datetime.now()
         reddit_results = RedditScraper.scrape(self.date_updated_reddit)
-        processed_data = self.process(reddit_results)
+        print('DONE REDDIT SCRAPE WITH {} RESULTS'.format(reddit_results.__len__()))
+        coinSentiments = []
+        for result in reddit_results:
+            post = Analyzer.analyze(result.title + ' ' + result.text)
+            comms = []
+            for comment in result.comments:
+                comms.append(Analyzer.analyze(comment))
+            coinSentiments.append([post, comms])
         self.date_updated_reddit = scrape_date
-        return processed_data
+        return coinSentiments
 
     def update_twitter(self):
         scrape_date = datetime.now()
@@ -37,7 +45,7 @@ class Scraper:
         processed_data = self.process(twitter_results)
         self.date_updated_twitter = scrape_date
         return processed_data
-    
+
     def update_coindesk(self):
         scrape_date = datetime.now()
         coindesk_results = RedditScraper.scrape(self.date_updated_coindesk)

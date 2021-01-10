@@ -17,7 +17,7 @@ def scrape(lastScanned):
 
 
     for subreddit in data['subreddits']:
-        for submission in reddit.subreddit(subreddit).new(limit=50):
+        for submission in reddit.subreddit(subreddit).new(limit=100):
             if (not lastScanned or datetime.fromtimestamp(submission.created) > lastScanned) and \
                     submission.link_flair_text is not None and submission.selftext != '' and \
                     submission.link_flair_text.lower() != 'comedy':
@@ -32,7 +32,12 @@ def scrape(lastScanned):
 
 
 class Post:
+    id = 1
     def __init__(self, title, text, comments):
+        # assign id for use later
+        self.id = Post.id
+        Post.id += 1
+
         self.title = title
         self.text = text
         self.comments = comments
